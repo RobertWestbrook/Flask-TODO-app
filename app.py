@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
 
@@ -20,11 +20,13 @@ db.create_all() # allows us to call on db.session
 @app.route('/todos/create', methods=['POST'])
 def create_todo():
     # define variable with the request info  
-    description = request.form.get('description', '')
+    description = request.get_json()['description']
     todo = Todo(description=description) #creates an instance of the Todo class and pass a value.
     db.session.add(todo) # Adds 'todo' item, which is INPUT, to pending. 
     db.session.commit() #commits the User input into db.
-    return redirect(url_for('index'))
+    return jsonify({
+        'description': todo.description
+    })
 
 
 @app.route('/')
