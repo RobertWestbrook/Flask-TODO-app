@@ -7,14 +7,13 @@
             }
         </style>
     </head>
-
     <body>   
-        <form method="post" action="/todos/create"> 
+        <form id="form"> 
             <input type="text" name="description" id="description" />
             <input type="submit" value="Create" />
         </form>
         <div id="error" class='hidden'>Something went wrong! </div> 
-        <ul id= "todos">
+        <ul id="todos">
             {% for d in data %}
             <li>{{ d.description }}</li>
             {% endfor %}
@@ -43,7 +42,10 @@
                 })
                 .catch(function() {
                     document.getElementById('error').className = '';
-                }) 
+                }) // fetch is a promise based function, so we can use .then and .catch to follow
+                   // up on that promise. This .catch calls a function that gets the element with 
+                   // id 'error' and chaneges the class name so that it is no longer using the same
+                   // style that is hidden.
             }
         </script>
     </body>
