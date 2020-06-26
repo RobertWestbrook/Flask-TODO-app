@@ -10,7 +10,7 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 class Todo(db.Model):
-# __tablename__ = 'todos'
+    # __tablename__ = 'todos'
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(), nullable=False)
     complete = db.Column(db.Boolean(), nullable=False, default= False)
@@ -26,7 +26,7 @@ def create_todo():
     try: # Try - Except - Finally statements are good practice to making testing and properly dealing 
          # with errors statements.
         description = request.get_json()['description']# define variable with the request info 
-        todo = Todo(description=description) #creates an instance of the Todo class and pass a value.
+        todo = Todo(description=description, completed=False) #creates an instance of the Todo class and pass a value.
         db.session.add(todo) # Adds 'todo' item, which is INPUT, to pending. 
         db.session.commit() #commits the User input into db.
         body['description'] = todo.description
@@ -43,10 +43,34 @@ def create_todo():
                              # an error will cause commit to expire and throw an error whentrying
                              # to access after the statement. 
 
+@app.route('/todos/<todo_id>/set-completed', methods=['POST'])
+def set_completed_todo(todo_id):
+    try:
+        completed = request.get_json()['completed']
+        todo = Todo.query.get(todo_id)
+        todo.complete = completed
+        db.session.commit()
+    except:
+        db.session.rollback()
+    finally:
+        db.session.close()
+    return redirect(url_for('index'))
+
+@app.route('/todos/<todo_id>', methods=['DELETE'])
+def delete_todo(todo_id):
+    try:
+        Todo.query.filter_by(id=todo_id).delete()
+        db.session.commit()
+    except:
+        db.session.rollback()
+    finally:
+        db.session.close()
+    return jsonify({'success': True })
+
 @app.route('/')
 def index():
-    return render_template('index.html', data=Todo.query.all())
+    return render_template('index.html', data=Todo.query.order_by('id').all())
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
