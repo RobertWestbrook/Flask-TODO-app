@@ -5,15 +5,30 @@
             .hidden {
                 display: none;
             }
+            .list-wrapper, .todos-wrapper {
+                display: inline-block;
+                vertical-align: top;
+                border: solid 1px grey;
+                padding: 5px;
+                margin: 10px;
+                background-color: ivory;
+                font-family:Verdana, Geneva, Tahoma, sans-serif;
+            }
+
+            #l-buttons {
+                background-color: springgreen;
+                font-size: 20px;
+            }
+
             ul {
                 list-style: none;
                 padding: 5px;
                 margin: 0;
-                width: 200px;
-                background: whitesmoke;
+                width: 300px;
+                /* background: whitesmoke;
                 border-radius: 4%;
                 border-style: solid;
-                border-width: 1px;
+                border-width: 1px; */
                 
             }
             li button {
@@ -26,24 +41,114 @@
                 cursor: pointer;
                 font-size: 15;
             }
+
         </style>
     </head>
-    <body>   
-        <form id="form"> 
-            <input type="text" name="description" id="description" />
-            <input type="submit" value="Create" />
-        </form>
-        <div id="error" class='hidden'>Something went wrong! </div> 
-        <ul id="todos">
-            {% for d in data %}
-            <li>
-                <input class= "check-completed" data-id="{{ d.id }}" type="checkbox" {% if d.complete %} checked {% endif %} />
-                {{ d.description }}
-                <button class="delete" data-id="{{ d.id }}">&cross;</button>
-            </li>
-            {% endfor %}
-        </ul>
+    <body>
+
+        <!-- Todo Lists -->
+        <div class= 'list-wrapper'>
+            <h4> Lists </h4>
+            <form id= 'create-list'>
+                <input type="text" name="name" id="list_name" />
+                <input type="submit" value="Create List" />                  
+            </form>
+            <div id="error_list" class='hidden'>Something went wrong! </div> 
+            
+            <ul id="list">
+                {% for list in lists %}
+                <li>
+                    <a id= 'l-buttons' href="/lists/{{ list.id }}">
+                        {{ list.name }}
+                    </a>
+                </li> 
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Todo Items -->
+        <div class= 'todos-wrapper'> 
+            <h4> {{ active_list.name }}</h4>
+            <form id="form"> 
+                <input type="text" name="description" id="description" />
+                <input type="submit" value="Create Todo" />
+            </form>
+            <div id="error" class='hidden'>Something went wrong! </div> 
+            <ul id="todos">
+                {% for todo in todos %}
+                <li>
+                    <input class= "check-completed" data-id="{{ todo.id }}" type="checkbox" {% if todo.complete %} checked {% endif %} />
+                    {{ todo.description }}
+                    <button class="delete" data-id="{{ todo.id }}">&cross;</button>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Scripts -->
         <script>
+            //Create Todo Lists
+            const listInput = document.getElementById('list_name');
+            document.getElementById('create-list').onsubmit = function(e) {
+                e.preventDefault();
+                const name = listInput.value;
+                fetch('/lists/create', {
+                    method: 'POST',
+                    body:JSON.stringify({
+                        'name':name,
+                    }),
+                    headers: {
+                    'Content-Type': 'application.json'
+                    }
+                })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(jsonResponse) {
+                    console.log('response', jsonResponse);
+                    const liList = document.createElement('li');
+                    liList.innerHTML = jsonResponse['name'];
+                    document.getElementById('list').appendChild(liList);
+                    document.getElementById('error_list').className = 'hidden';
+                })
+                .catch(function() {
+                    document.getElementById('error_list').className = '';
+                }) 
+            }
+
+            // Create Todo Items
+            const descInput = document.getElementById('description');
+            document.getElementById('form').onsubmit = function(e) {
+                e.preventDefault();
+                const desc = descInput.value;
+                fetch('/todos/create', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        'description': desc,
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(jsonResponse) {
+                    console.log('response', jsonResponse);
+                    const liItem = document.createElement('li');
+                    liItem.innerText = desc;
+                    document.getElementById('todos').appendChild(liItem);
+                    document.getElementById('error').className = 'hidden';
+                })
+                .catch(function() {
+                    document.getElementById('error').className = '';
+                }) // fetch is a promise based function, so we can use .then and .catch to follow
+                   // up on that promise. This .catch calls a function that gets the element with 
+                   // id 'error' and chaneges the class name so that it is no longer using the same
+                   // style that is hidden.
+            }
+
+            // Check Completed Items
             const checkboxes = document.querySelectorAll('.check-completed');
             for (let i = 0; i < checkboxes.length; i++) {
                 const checkbox = checkboxes[i];
@@ -68,7 +173,10 @@
                     }) 
                 }
             }
+            // Delets Todo lists
 
+
+            // Delete Items
             const delete_buttons = document.querySelectorAll('.delete');
             for (let i = 0; i < delete_buttons.length; i++) {
                 const delete_button = delete_buttons[i];
@@ -85,34 +193,6 @@
                 }
             }
 
-            document.getElementById('form').onsubmit = function(e) {
-                e.preventDefault();
-                fetch('/todos/create', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        'description': document.getElementById('description').value
-                    }),
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(function(response) {
-                    return response.json();
-                })
-                .then(function(jsonResponse) {
-                    console.log(jsonResponse);
-                    const liItem = document.createElement('LI');
-                    liItem.innerHTML = jsonResponse['description'];
-                    document.getElementById('todos').appendChild(liItem);
-                    document.getElementById('error').className = 'hidden';
-                })
-                .catch(function() {
-                    document.getElementById('error').className = '';
-                }) // fetch is a promise based function, so we can use .then and .catch to follow
-                   // up on that promise. This .catch calls a function that gets the element with 
-                   // id 'error' and chaneges the class name so that it is no longer using the same
-                   // style that is hidden.
-            }
         </script>
     </body>
 </html>
