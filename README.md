@@ -2,7 +2,7 @@
 Simple web app designed in Flask and SQL
 
 # In Development
-## Still full of bugs and requires extensive knoledge of Flask Migrations and SQL Databases to execute.
+## !!!Still full of bugs and requires extensive knowledge of Flask Migrations and SQL Databases to execute.!!!
 
 ## TODO:
 - Database is not self establishing and in no way mobile. 
